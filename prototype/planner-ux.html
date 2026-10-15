@@ -1,0 +1,123 @@
+<!-- PROTOTYPE — throwaway, not production. Three variants of the monthly planner, switchable via ?variant=A|B|C. Run: open this file in a browser or `python3 -m http.server` then /prototype/planner-ux.html -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PROTOTYPE: Monthly Planner UX (A/B/C)</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0 0 90px; background: #f6f6f4; color: #1a1a1a; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 24px; }
+  .proto-banner { background: #1a1a1a; color: #ffd60a; padding: 8px 16px; font-size: 13px; font-weight: 700; }
+  table { border-collapse: collapse; width: 100%; background: #fff; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 14px; }
+  .warn { background: #fff3cd; border: 1px solid #e0a800; padding: 8px 12px; margin: 8px 0; }
+  .ok { background: #d4edda; border: 1px solid #28a745; padding: 8px 12px; margin: 8px 0; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card { background: #fff; border: 1px solid #ddd; padding: 16px; }
+  .steps { display: flex; gap: 8px; margin-bottom: 16px; }
+  .steps button { padding: 8px 12px; }
+  .chat { background: #fff; border: 1px solid #ddd; padding: 16px; max-width: 640px; }
+  .bubble { border-radius: 12px; padding: 10px 14px; margin: 8px 0; max-width: 90%; }
+  .bubble.me { background: #e7f3ff; margin-left: auto; }
+  .bubble.ai { background: #f1f1f1; }
+  #switcher { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: #111; color: #fff; border-radius: 999px; padding: 8px 12px; display: flex; gap: 12px; align-items: center; box-shadow: 0 4px 16px rgba(0,0,0,.35); z-index: 99; }
+  #switcher button { background: #fff; border: 0; border-radius: 999px; width: 32px; height: 32px; cursor: pointer; font-size: 16px; }
+  input, select { padding: 6px; margin: 2px 0; width: 100%; box-sizing: border-box; }
+  pre.state { background: #111; color: #b6f09c; padding: 12px; font-size: 12px; overflow: auto; }
+</style>
+</head>
+<body>
+<div class="proto-banner">PROTOTYPE — throwaway UX for decision only, not production. Variant: <span id="vlabel"></span></div>
+<div class="wrap" id="app"></div>
+<div id="switcher">
+  <button id="prev" aria-label="previous">←</button>
+  <span id="cur"></span>
+  <button id="next" aria-label="next">→</button>
+</div>
+<script>
+// ---- deterministic sample state (in-memory, no persistence) ----
+const state = {
+  currency: "NGN",
+  income: 250000, sideInflow: 50000, rollover: 20000,
+  savingsTargetPct: 20, needsCapPct: 50, wantsCapPct: 30,
+  expenses: [
+    { name: "Rent", category: "Housing", amount: 100000, fixed: true, oneOff: false },
+    { name: "Feeding", category: "Food", amount: 60000, fixed: false, oneOff: false },
+    { name: "Transport", category: "Transport", amount: 25000, fixed: false, oneOff: false },
+    { name: "Utilities", category: "Utilities", amount: 15000, fixed: true, oneOff: false },
+    { name: "Loan minimum", category: "Other", amount: 20000, fixed: true, oneOff: false },
+    { name: "Health", category: "Health", amount: 10000, fixed: false, oneOff: false },
+    { name: "Appliance repair", category: "Other", amount: 30000, fixed: false, oneOff: true }
+  ]
+};
+function compute(s) {
+  const available = s.income + s.sideInflow + s.rollover;
+  const totalExp = s.expenses.reduce((a, e) => a + e.amount, 0);
+  const leftover = available - totalExp;
+  const savingsTarget = Math.round(available * s.savingsTargetPct / 100);
+  const warnings = [];
+  const rent = s.expenses.find(e => e.name === "Rent").amount;
+  if (rent / available > 0.5) warnings.push("Rent severe: over 50% of available.");
+  else if (rent / available > 0.3) warnings.push("Rent burden: over 30% of available (" + Math.round(rent/available*100) + "%).");
+  const debt = s.expenses.filter(e => e.name.includes("Loan")).reduce((a, e) => a + e.amount, 0);
+  if (debt / available > 0.36) warnings.push("All-debt over 36%.");
+  if ((leftover / available) < 0.2) warnings.push("Savings under 20% — leftover " + leftover.toLocaleString() + ".");
+  if (leftover < 0) warnings.push("Shortfall: assigned over available by " + (-leftover).toLocaleString() + ". Cut Wants first.");
+  return { available, totalExp, leftover, savingsTarget, warnings };
+}
+const VARIANTS = ["A", "B", "C"];
+const NAMES = { A: "Wizard flow", B: "Dashboard", C: "Advisor chat" };
+function getVariant() {
+  const v = new URLSearchParams(location.search).get("variant");
+  return VARIANTS.includes(v) ? v : "A";
+}
+function setVariant(v) {
+  const u = new URL(location.href);
+  u.searchParams.set("variant", v);
+  location.href = u.toString();
+}
+function statePre(c) {
+  return "<pre class='state'>STATE " + JSON.stringify(c, null, 1).replace(/</g, "&lt;") + "</pre>";
+}
+function planTable(c) {
+  return "<table><tr><th>Line</th><th>Amount</th></tr>" +
+    "<tr><td>Available (income + side + rollover)</td><td>" + c.available.toLocaleString() + "</td></tr>" +
+    "<tr><td>Total expenses</td><td>" + c.totalExp.toLocaleString() + "</td></tr>" +
+    "<tr><td>Leftover → Savings</td><td>" + c.leftover.toLocaleString() + "</td></tr>" +
+    "<tr><td>Savings target (20%)</td><td>" + c.savingsTarget.toLocaleString() + "</td></tr></table>";
+}
+function warningsHtml(c) {
+  if (!c.warnings.length) return "<div class='ok'>No warnings.</div>";
+  return c.warnings.map(w => "<div class='warn'>⚠ " + w + "</div>").join("");
+}
+function adviceHtml() {
+  return "<ol><li>Rent is the biggest lever — over 30% burden.</li><li>Protect the 20% savings carve-out before Wants.</li><li>One-off repair stays out of recurring baseline.</li></ol>";
+}
+function render() {
+  const v = getVariant(), c = compute(state), el = document.getElementById("app");
+  document.getElementById("vlabel").textContent = v + " (" + NAMES[v] + ")";
+  document.getElementById("cur").textContent = v + " (" + NAMES[v] + ")";
+  if (v === "A") {
+    el.innerHTML = "<h1>Monthly plan — wizard</h1><div class='steps'><button>1 Income</button><button>2 Expenses</button><button><b>3 Plan + Advice</b></button></div>" +
+      "<div class='card'><h2>Step 3: your plan (" + state.currency + ")</h2>" + planTable(c) + warningsHtml(c) + "<h3>Advice</h3>" + adviceHtml() + "</div>" + statePre(c);
+  } else if (v === "B") {
+    el.innerHTML = "<h1>Monthly plan — dashboard</h1><div class='cols'><div class='card'><h2>Inputs</h2><label>Income<input value='" + state.income + "'></label><label>Side inflow<input value='" + state.sideInflow + "'></label><label>Rollover<input value='" + state.rollover + "'></label><p>7 expenses loaded (rent 100k, feeding 60k, …). Fixed required, variable estimated, one-offs flagged.</p></div>" +
+      "<div class='card'><h2>Plan</h2>" + planTable(c) + warningsHtml(c) + "<h3>Advice</h3>" + adviceHtml() + "</div></div>" + statePre(c);
+  } else {
+    el.innerHTML = "<h1>Monthly plan — advisor chat</h1><div class='chat'><div class='bubble me'>I earn 250k + 50k side, 20k rollover. Rent 100k, feeding 60k… what works?</div>" +
+      "<div class='bubble ai'>Available <b>" + c.available.toLocaleString() + "</b>, expenses <b>" + c.totalExp.toLocaleString() + "</b>, leftover <b>" + c.leftover.toLocaleString() + "</b>.</div>" +
+      "<div class='bubble ai'>" + warningsHtml(c) + adviceHtml() + "</div></div>" + statePre(c);
+  }
+}
+document.getElementById("prev").onclick = () => { const v = getVariant(); setVariant(VARIANTS[(VARIANTS.indexOf(v) + 2) % 3]); };
+document.getElementById("next").onclick = () => { const v = getVariant(); setVariant(VARIANTS[(VARIANTS.indexOf(v) + 1) % 3]); };
+document.addEventListener("keydown", e => {
+  if (/INPUT|TEXTAREA/.test(document.activeElement.tagName) || document.activeElement.isContentEditable) return;
+  if (e.key === "ArrowLeft") document.getElementById("prev").click();
+  if (e.key === "ArrowRight") document.getElementById("next").click();
+});
+render();
+</script>
+</body>
+</html>
