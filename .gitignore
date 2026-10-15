@@ -5,3 +5,6 @@ __pycache__/
 *.pyc
 *.db*
 .pytest_cache/
+web/engine/pkg/
+target/
+crates/*/target/

@@ -1,0 +1,10 @@
+[package]
+name = "budget-engine"
+version = "0.1.0"
+edition = "2021"
+description = "Canonical deterministic monthly budget engine: month inputs in integer minor units in, Plan plus Warnings out"
+license = "MIT"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

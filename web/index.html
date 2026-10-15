@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monthly Planner · Plan the month before it spends you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Inconsolata:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app/app.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+</head>
+<body data-active="">
+<main><section class="section"><div class="container">
+  <div class="hero-grid" style="align-items:center">
+    <div class="stack" style="margin-top:0">
+      <p class="eyebrow">Single user · on-device · SQLite on your machine</p>
+      <h1>Plan the month<br>before it spends you.</h1>
+      <p class="lead">Plan this month in three steps. Enter inflows and categorized expenses; the deterministic engine runs on your device and returns the Plan, Warnings on locked rules, and Advice that cites the computed numbers — nothing ever leaves your machine.</p>
+      <div class="row">
+        <a class="btn btn-primary btn-arrow" href="income.html">Start step 1 — Income </a>
+        <a class="btn btn-ghost" href="months.html">Past months</a>
+      </div>
+      <div class="row">
+        <span class="badge badge-muted">No bank sync</span>
+        <span class="badge badge-muted">Manual entry only</span>
+        <span class="badge badge-muted">On-device compute</span>
+      </div>
+    </div>
+    <div class="card card-elev">
+      <p class="eyebrow" style="color:var(--fg-2)">How it works</p>
+      <div class="stat"><div class="stat-num pos">50/30/20</div>
+      <div class="stat-label">Needs / Wants / savings split, savings-first, adjustable on the Plan step.</div></div>
+      <hr class="divider">
+      <p class="body-muted" style="font-size:14.5px;margin:0">Deterministic budget math owns every number and runs in WebAssembly on your device. Advice only verbalizes the computed Plan behind a validator. It suggests; it never moves money.</p>
+      <hr class="divider">
+      <a class="btn btn-dark" style="width:100%;justify-content:center" href="income.html">Start: step 1 Income</a>
+      <p class="meta" style="margin-top:12px"><a class="link-accent" href="months.html">Past months</a> · one currency per month, no conversion.</p>
+    </div>
+  </div>
+  <hr class="rule" style="margin-block:48px 32px">
+  <p class="eyebrow">Three steps, guided</p>
+  <div class="grid-3">
+    <a class="step-card" href="income.html"><span class="big-index num">01</span>
+    <span><span class="h3">Income</span><p>Recurring income, other inflows, rollover, goal, and Emergency Fund balance.</p></span></a>
+    <a class="step-card" href="expenses.html"><span class="big-index num">02</span>
+    <span><span class="h3">Expenses</span><p>Each expense with category and fixed, one-off, and debt-payment flags.</p></span></a>
+    <a class="step-card" href="plan.html"><span class="big-index num">03</span>
+    <span><span class="h3">Plan &amp; Advice</span><p>Available minus expenses equals leftover; warnings; guarded advice.</p></span></a>
+  </div>
+</div></section></main>
+<script type="module">
+import { renderChrome } from './app/chrome.js';
+renderChrome('');
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Past months · Monthly Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Inconsolata:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app/app.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+</head>
+<body data-active="months">
+<main><section class="section"><div class="container">
+  <p class="eyebrow">Archive · one currency per month, no conversion</p>
+  <div class="row-between">
+    <h1 style="font-size:clamp(32px,4vw,56px)">Past months</h1>
+    <a class="btn btn-primary" href="income.html">Plan a new month</a>
+  </div>
+  <div class="table-wrap" style="margin-top:24px"><table class="ds-table" aria-label="Past months">
+    <thead><tr><th>Month</th><th>Currency</th>
+    <th style="text-align:right">Available</th><th style="text-align:right">Total</th>
+    <th style="text-align:right">Leftover</th><th style="text-align:right">Savings rate</th><th>Warnings</th><th></th></tr></thead>
+    <tbody id="month-rows"></tbody>
+  </table></div>
+  <p class="body-muted" style="font-size:14px" id="empty-note" hidden>No months yet — start a new month.</p>
+  <hr class="divider">
+  <div class="card">
+    <p class="eyebrow" style="color:var(--fg-2)">One-shot migration · from the old server</p>
+    <h3 style="font-size:20px">Bring months onto this device</h3>
+    <p class="body-muted" style="font-size:14.5px">Export them from the server database (<span class="meta">node scripts/export-months.mjs</span>), then import each file here. Months land in the on-device store with their Expenses and Advice log intact.</p>
+    <div class="stack" style="gap:12px;margin-top:16px">
+      <div class="field"><label for="mig-file">Migration file (month-N.json)</label>
+        <input class="input" id="mig-file" type="file" accept="application/json"></div>
+      <div class="field"><label for="mig-text">Or paste the document</label>
+        <input class="input" id="mig-text" placeholder='{"version":1,"month":{…}}'></div>
+      <p class="meta" id="mig-msg" hidden></p>
+      <div class="row"><button class="btn btn-dark" id="mig-import">Import month</button></div>
+    </div>
+  </div>
+  <p style="margin-top:16px"><a class="btn btn-ghost" href="income.html">Start a new month</a></p>
+</div></section></main>
+<script type="module">
+import { renderChrome } from './app/chrome.js';
+import { escapeHtml, fmtMoneyShort, monthInputsForEngine, planMonth } from './app/engine.js';
+import { openStore, importMonthDoc } from './store/store.js';
+
+renderChrome('months');
+const $ = (id) => document.getElementById(id);
+const store = await openStore();
+
+async function refresh() {
+  const listed = await store.listMonths();
+  const tb = $('month-rows');
+  tb.innerHTML = '';
+  $('empty-note').hidden = listed.length > 0;
+  for (const { id, currency } of listed) {
+    const month = await store.getMonth(id);
+    const plan = await planMonth(monthInputsForEngine(month));
+    const rate = plan.available_cents > 0 ? Math.floor((plan.leftover_cents * 100) / plan.available_cents) : 0;
+    const badge = plan.warnings.length
+      ? `<span class="badge badge-warn"><span class="badge-dot"></span>${plan.warnings.length}</span>`
+      : `<span class="badge badge-success"><span class="badge-dot"></span>clear</span>`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td style="font-weight:600">${id}</td>` +
+      `<td class="meta">${escapeHtml(currency)}</td>` +
+      `<td class="num-col">${fmtMoneyShort(plan.available_cents, currency)}</td>` +
+      `<td class="num-col">${fmtMoneyShort(plan.total_expenses_cents, currency)}</td>` +
+      `<td class="num-col" style="font-weight:700">${fmtMoneyShort(plan.leftover_cents, currency)}</td>` +
+      `<td class="num-col">${rate}%</td><td>${badge}</td>` +
+      `<td><a class="link-accent" href="plan.html?month=${id}">Open</a></td>`;
+    tb.appendChild(tr);
+  }
+}
+await refresh();
+
+const msg = $('mig-msg');
+async function importDoc(doc) {
+  const id = await store.importMonthDoc(doc);
+  await refresh();
+  msg.hidden = false;
+  msg.textContent = `Imported as month ${id}.`;
+}
+$('mig-import').addEventListener('click', async () => {
+  msg.hidden = true;
+  try {
+    const file = $('mig-file').files[0];
+    if (file) {
+      importDoc(JSON.parse(await file.text()));
+      return;
+    }
+    const text = $('mig-text').value.trim();
+    if (!text) throw new Error('Choose a file or paste a document first');
+    importDoc(JSON.parse(text));
+  } catch (e) {
+    msg.hidden = false;
+    msg.textContent = `Import failed: ${e.message}`;
+  }
+});
+</script>
+</body>
+</html>

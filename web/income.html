@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Step 1: Income · Monthly Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Inconsolata:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app/app.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+</head>
+<body data-active="income">
+<main><section class="section"><div class="container">
+  <div id="steps" style="margin-bottom:24px"></div>
+  <div class="grid-2-1" style="margin-top:8px">
+    <div class="card card-elev">
+      <p class="eyebrow">Step 1 — Money in</p>
+      <h2>What do you expect to receive?</h2>
+      <form id="income-form" style="margin-top:24px" novalidate>
+        <div class="stack" style="gap:16px">
+          <div class="grid-2" style="gap:16px">
+            <div class="field"><label for="f-currency">Currency code</label>
+              <input class="input" id="f-currency" value="NGN" maxlength="8">
+              <span class="field-help">One currency per month; no conversion, ever.</span></div>
+            <div class="field"><label for="f-income">Recurring Income · monthly</label>
+              <div class="money"><span class="cur">₦</span><input class="input num" id="f-income" inputmode="numeric" value="600000"></div>
+              <span class="field-help">Salary or the inflow you can count on. Irregular earner? Use your conservative baseline.</span></div>
+          </div>
+          <div class="grid-2" style="gap:16px">
+            <div class="field"><label for="f-side">Other Inflows this month</label>
+              <div class="money"><span class="cur">₦</span><input class="input num" id="f-side" inputmode="numeric" value="85000"></div>
+              <span class="field-help">Side work, gifts, one-off receipts — all money in counts.</span></div>
+            <div class="field"><label for="f-rollover">Savings Rollover · from last month</label>
+              <div class="money"><span class="cur">₦</span><input class="input num" id="f-rollover" inputmode="numeric" value="0"></div>
+              <span class="field-help">Leftover carried forward. Amounts are whole units; math is exact minor units underneath.</span></div>
+          </div>
+          <div class="grid-2" style="gap:16px">
+            <div class="field"><label for="f-goal">Monthly Savings Goal · target</label>
+              <div class="money"><span class="cur">₦</span><input class="input num" id="f-goal" inputmode="numeric" value="0"></div>
+              <span class="field-help">0 = no explicit goal; the split still applies.</span></div>
+            <div class="field"><label for="f-emergency">Emergency Fund saved · so far</label>
+              <div class="money"><span class="cur">₦</span><input class="input num" id="f-emergency" inputmode="numeric" value="0"></div>
+              <span class="field-help">Judged in months of essentials — aim ≥ 3.</span></div>
+          </div>
+          <p class="meta" id="form-error" style="color:var(--danger)" hidden></p>
+          <div class="row" style="margin-top:8px">
+            <button class="btn btn-primary btn-arrow" type="submit">Continue to Expenses </button>
+            <span class="meta">Saved on your device as integer minor units — exact arithmetic, no rounding.</span>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="stack" style="margin-top:0">
+      <div class="card card-neon">
+        <p class="eyebrow" style="color:var(--fg-2)">Computes now</p>
+        <div class="stat is-hero"><div class="stat-num num" id="preview-available">—</div>
+        <div class="stat-label">Available for the month</div><div class="stat-sub">income + inflows + rollover</div></div>
+        <hr class="divider">
+        <p class="field-help" style="margin:0">Computed live on your device; stored only when you continue.</p>
+      </div>
+      <div class="card"><span class="h3">Irregular earner?</span>
+        <p class="body-muted" style="font-size:14.5px;margin:8px 0 0">Use your <strong style="color:var(--fg)">Conservative Income</strong> as the Recurring Income — the lowest month you reliably expect — so a low month never over-commits the Plan.</p></div>
+    </div>
+  </div>
+</div></section></main>
+<script type="module">
+import { renderChrome, stepper } from './app/chrome.js';
+import { fmtMoneyShort, minorUnitsToUnits, unitsToMinorUnits } from './app/engine.js';
+import { openStore } from './store/store.js';
+
+renderChrome('income');
+document.getElementById('steps').innerHTML = stepper('income');
+
+const params = new URLSearchParams(location.search);
+const preRollover = Number(params.get('rollover_cents'));
+if (Number.isInteger(preRollover) && preRollover >= 0 && preRollover > 0) {
+  document.getElementById('f-rollover').value = String(minorUnitsToUnits(preRollover));
+}
+
+const $ = (id) => document.getElementById(id);
+const num = (id) => { const v = $(id).value.trim(); return v === '' ? NaN : Number(v); };
+function refresh() {
+  try {
+    const total = unitsToMinorUnits(num('f-income')) + unitsToMinorUnits(num('f-side')) + unitsToMinorUnits(num('f-rollover'));
+    $('preview-available').textContent = fmtMoneyShort(total);
+  } catch { $('preview-available').textContent = '—'; }
+}
+$('income-form').addEventListener('input', refresh);
+refresh();
+
+const err = $('form-error');
+$('income-form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  err.hidden = true;
+  try {
+    const input = {
+      currency: ($('f-currency').value || 'NGN').trim().toUpperCase().slice(0, 8) || 'NGN',
+      income_cents: unitsToMinorUnits(num('f-income')),
+      side_cents: unitsToMinorUnits(num('f-side')),
+      rollover_cents: unitsToMinorUnits(num('f-rollover')),
+      savings_goal_cents: unitsToMinorUnits(num('f-goal')),
+      emergency_saved_cents: unitsToMinorUnits(num('f-emergency')),
+      expenses: [],
+    };
+    const store = await openStore();
+    const id = await store.saveMonth(input);
+    await store.close();
+    location.href = `expenses.html?month=${id}`;
+  } catch (e) {
+    err.textContent = e.message;
+    err.hidden = false;
+  }
+});
+</script>
+</body>
+</html>

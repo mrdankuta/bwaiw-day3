@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On-device store harness</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#000;color:#fff;max-width:760px;margin:24px auto;padding:0 16px}
+button{padding:10px 16px;margin:4px 8px 4px 0;font:inherit;cursor:pointer}
+.pass{color:#4ade80}.fail{color:#f87171}.meta{color:#a0a0a0;font-family:monospace;font-size:13px}
+li{margin:6px 0}
+</style>
+</head>
+<body>
+<h1>On-device store harness</h1>
+<p class="meta" id="backend">backend: …</p>
+<p>Serve this directory over HTTP first (<span class="meta">npx serve .</span> from the repo root, then open <span class="meta">/web/store/harness.html</span>). Reload the page and re-run: months saved earlier must still be listed (persistence check).</p>
+<p><button id="run">Run acceptance checks</button> <button id="reset">Delete saved months</button></p>
+<ol id="results"></ol>
+<script type="module">
+import { openStore } from './store.js';
+
+const results = document.getElementById('results');
+const log = (ok, text) => {
+  const li = document.createElement('li');
+  li.className = ok ? 'pass' : 'fail';
+  li.textContent = (ok ? 'PASS ' : 'FAIL ') + text;
+  results.appendChild(li);
+};
+const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+let store;
+try {
+  store = await openStore();
+  document.getElementById('backend').textContent = `backend: ${store.backend}`;
+} catch (e) {
+  log(false, `open store: ${e.message}`);
+}
+
+const SAMPLE = {
+  currency: 'NGN', income_cents: 10000, side_cents: 500, rollover_cents: 2000,
+  savings_goal_cents: 3000, emergency_saved_cents: 8000, expenses: [
+    { name: 'Rent', category: 'Housing', amount_cents: 4000, fixed: true, one_off: false, debt: false },
+    { name: 'Loan', category: 'Other', amount_cents: 2000, fixed: false, one_off: false, debt: true },
+  ],
+};
+
+document.getElementById('run').addEventListener('click', async () => {
+  results.innerHTML = '';
+  try {
+    // 1. round-trip identical
+    const id = await store.saveMonth(structuredClone(SAMPLE));
+    const back = await store.getMonth(id);
+    const { id: _dropped, ...rest } = back;
+    const expected = { ...SAMPLE, expenses: SAMPLE.expenses.map(({ id: _x, ...e }) => e) };
+    const backExpenses = back.expenses.map(({ id: _x, ...e }) => e);
+    log(eq({ ...rest, expenses: backExpenses }, expected), `round-trip identical (month ${id})`);
+
+    // 2. expense ids + flags survive
+    log(back.expenses.length === 2 && back.expenses[0].fixed && back.expenses[1].debt, 'expense flags survive');
+
+    // 3. advice log
+    await store.saveAdvice({ monthId: id, backend: 'template-local', prompt_version: 'advice-v1',
+      model_version: 'template-local-v1', prompt: 'p', data_flow: 'local', output: 'line one\nline two' });
+    const latest = await store.latestAdvice(id);
+    log(latest?.output === 'line one\nline two' && latest?.backend === 'template-local', 'advice log round-trips');
+
+    // 4. export/import identical grain
+    const doc = await store.exportMonth(id);
+    const id2 = await store.importMonthDoc(structuredClone(doc));
+    const re = await store.getMonth(id2);
+    const strip = (m) => ({ ...m, id: 0, expenses: m.expenses.map(({ id: _x, ...e }) => e) });
+    log(eq(strip(re), strip(back)), `export/import identical (month ${id2})`);
+
+    // 5. unknown month + bad input rejected
+    log((await store.getMonth(999999)) === null, 'unknown month reads null');
+    try { await store.addExpense(999999, SAMPLE.expenses[0]); log(false, 'unknown month expense rejected'); }
+    catch { log(true, 'unknown month expense rejected'); }
+    try { await store.saveMonth({ ...SAMPLE, income_cents: -1 }); log(false, 'negative input rejected'); }
+    catch { log(true, 'negative input rejected'); }
+
+    // 6. persistence hint: months listed (reload the page and re-run to verify durability)
+    const listed = await store.listMonths();
+    log(listed.some((m) => m.id === id), `month listed (${listed.length} total — reload page and re-run for durability)`);
+  } catch (e) {
+    log(false, `unexpected: ${e.message}`);
+  }
+});
+
+document.getElementById('reset').addEventListener('click', async () => {
+  // Fresh harness run: clear by deleting via a new store is out of scope for
+  // the ticket; clear site data in devtools instead. Listed for honesty.
+  const listed = await store.listMonths();
+  log(true, `not cleared (${listed.length} months) — clear site data in devtools to reset`);
+});
+</script>
+</body>
+</html>

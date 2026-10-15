@@ -1,0 +1,1040 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "available-total-leftover",
+      "inputs": {
+        "income_cents": 25000,
+        "side_cents": 5000,
+        "rollover_cents": 2000,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Rent",
+            "category": "Housing",
+            "amount_cents": 10000,
+            "fixed": false,
+            "one_off": false,
+            "debt": false
+          },
+          {
+            "name": "Feeding",
+            "category": "Food",
+            "amount_cents": 6000,
+            "fixed": false,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 32000,
+        "total_expenses_cents": 16000,
+        "leftover_cents": 16000,
+        "savings_target_cents": 6400,
+        "needs_total_cents": 0,
+        "wants_total_cents": 16000,
+        "warning_rule_ids": [
+          "rent-burden",
+          "housing-cap"
+        ],
+        "suggestions": [
+          "Assign leftover 16000 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "empty-month",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": []
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 0,
+        "leftover_cents": 10000,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 0,
+        "wants_total_cents": 0,
+        "warning_rule_ids": [],
+        "suggestions": [
+          "Assign leftover 10000 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "one-off-flagged",
+      "inputs": {
+        "income_cents": 30000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Repair",
+            "category": "Other",
+            "amount_cents": 3000,
+            "fixed": false,
+            "one_off": true,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 30000,
+        "total_expenses_cents": 3000,
+        "leftover_cents": 27000,
+        "savings_target_cents": 6000,
+        "needs_total_cents": 0,
+        "wants_total_cents": 3000,
+        "warning_rule_ids": [],
+        "suggestions": [
+          "Assign leftover 27000 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "shortfall-negative",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Rent",
+            "category": "Housing",
+            "amount_cents": 15000,
+            "fixed": true,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 15000,
+        "leftover_cents": -5000,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 15000,
+        "wants_total_cents": 0,
+        "warning_rule_ids": [
+          "rent-severe",
+          "housing-cap",
+          "savings-floor",
+          "shortfall"
+        ],
+        "suggestions": [
+          "Review Needs: fixed and debt minimums."
+        ]
+      }
+    },
+    {
+      "id": "savings-target-default",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": []
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 0,
+        "leftover_cents": 10000,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 0,
+        "wants_total_cents": 0,
+        "warning_rule_ids": [],
+        "suggestions": [
+          "Assign leftover 10000 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "savings-target-adjusted",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 30,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": []
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 0,
+        "leftover_cents": 10000,
+        "savings_target_cents": 3000,
+        "needs_total_cents": 0,
+        "wants_total_cents": 0,
+        "warning_rule_ids": [],
+        "suggestions": [
+          "Assign leftover 10000 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "needs-wants-split",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Rent",
+            "category": "Housing",
+            "amount_cents": 4000,
+            "fixed": true,
+            "one_off": false,
+            "debt": false
+          },
+          {
+            "name": "Loan",
+            "category": "Other",
+            "amount_cents": 1000,
+            "fixed": true,
+            "one_off": false,
+            "debt": true
+          },
+          {
+            "name": "Eating out",
+            "category": "Food",
+            "amount_cents": 2000,
+            "fixed": false,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 7000,
+        "leftover_cents": 3000,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 5000,
+        "wants_total_cents": 2000,
+        "warning_rule_ids": [
+          "rent-burden",
+          "housing-cap"
+        ],
+        "suggestions": [
+          "Assign leftover 3000 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "rent-burden-boundary",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Rent",
+            "category": "Housing",
+            "amount_cents": 3000,
+            "fixed": true,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 3000,
+        "leftover_cents": 7000,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 3000,
+        "wants_total_cents": 0,
+        "warning_rule_ids": [
+          "rent-burden",
+          "housing-cap"
+        ],
+        "suggestions": [
+          "Assign leftover 7000 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "rent-severe-boundary",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Rent",
+            "category": "Housing",
+            "amount_cents": 5000,
+            "fixed": true,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 5000,
+        "leftover_cents": 5000,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 5000,
+        "wants_total_cents": 0,
+        "warning_rule_ids": [
+          "rent-severe",
+          "housing-cap"
+        ],
+        "suggestions": [
+          "Assign leftover 5000 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "rent-just-below-burden",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Rent",
+            "category": "Housing",
+            "amount_cents": 2900,
+            "fixed": true,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 2900,
+        "leftover_cents": 7100,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 2900,
+        "wants_total_cents": 0,
+        "warning_rule_ids": [
+          "housing-cap"
+        ],
+        "suggestions": [
+          "Assign leftover 7100 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "rent-just-below-severe",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Rent",
+            "category": "Housing",
+            "amount_cents": 4900,
+            "fixed": true,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 4900,
+        "leftover_cents": 5100,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 4900,
+        "wants_total_cents": 0,
+        "warning_rule_ids": [
+          "rent-burden",
+          "housing-cap"
+        ],
+        "suggestions": [
+          "Assign leftover 5100 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "housing-over",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Rent",
+            "category": "Housing",
+            "amount_cents": 2000,
+            "fixed": true,
+            "one_off": false,
+            "debt": false
+          },
+          {
+            "name": "Power",
+            "category": "Utilities",
+            "amount_cents": 900,
+            "fixed": true,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 2900,
+        "leftover_cents": 7100,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 2900,
+        "wants_total_cents": 0,
+        "warning_rule_ids": [
+          "housing-cap"
+        ],
+        "suggestions": [
+          "Assign leftover 7100 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "housing-exact-cap",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Power",
+            "category": "Utilities",
+            "amount_cents": 2800,
+            "fixed": false,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 2800,
+        "leftover_cents": 7200,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 0,
+        "wants_total_cents": 2800,
+        "warning_rule_ids": [],
+        "suggestions": [
+          "Assign leftover 7200 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "housing-just-over-cap",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Power",
+            "category": "Utilities",
+            "amount_cents": 2900,
+            "fixed": false,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 2900,
+        "leftover_cents": 7100,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 0,
+        "wants_total_cents": 2900,
+        "warning_rule_ids": [
+          "housing-cap"
+        ],
+        "suggestions": [
+          "Assign leftover 7100 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "debt-over-cap",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Loan",
+            "category": "Other",
+            "amount_cents": 3700,
+            "fixed": true,
+            "one_off": false,
+            "debt": true
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 3700,
+        "leftover_cents": 6300,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 3700,
+        "wants_total_cents": 0,
+        "warning_rule_ids": [
+          "debt-cap"
+        ],
+        "suggestions": [
+          "Assign leftover 6300 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "debt-exact-cap",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Loan",
+            "category": "Other",
+            "amount_cents": 3600,
+            "fixed": false,
+            "one_off": false,
+            "debt": true
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 3600,
+        "leftover_cents": 6400,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 3600,
+        "wants_total_cents": 0,
+        "warning_rule_ids": [],
+        "suggestions": [
+          "Assign leftover 6400 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "savings-thin",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Rent",
+            "category": "Housing",
+            "amount_cents": 8500,
+            "fixed": true,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 8500,
+        "leftover_cents": 1500,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 8500,
+        "wants_total_cents": 0,
+        "warning_rule_ids": [
+          "rent-severe",
+          "housing-cap",
+          "savings-floor"
+        ],
+        "suggestions": [
+          "Assign leftover 1500 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "savings-exact-floor",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Feeding",
+            "category": "Food",
+            "amount_cents": 8000,
+            "fixed": false,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 8000,
+        "leftover_cents": 2000,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 0,
+        "wants_total_cents": 8000,
+        "warning_rule_ids": [],
+        "suggestions": [
+          "Assign leftover 2000 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "savings-just-under-floor",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Feeding",
+            "category": "Food",
+            "amount_cents": 8100,
+            "fixed": false,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 8100,
+        "leftover_cents": 1900,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 0,
+        "wants_total_cents": 8100,
+        "warning_rule_ids": [
+          "savings-floor"
+        ],
+        "suggestions": [
+          "Assign leftover 1900 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "emergency-low-cover",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": 5000,
+        "expenses": [
+          {
+            "name": "Rent",
+            "category": "Housing",
+            "amount_cents": 4000,
+            "fixed": true,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 4000,
+        "leftover_cents": 6000,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 4000,
+        "wants_total_cents": 0,
+        "warning_rule_ids": [
+          "rent-burden",
+          "housing-cap",
+          "emergency-cover"
+        ],
+        "suggestions": [
+          "Assign leftover 6000 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "emergency-just-under-cover",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": 11900,
+        "expenses": [
+          {
+            "name": "Rent",
+            "category": "Housing",
+            "amount_cents": 4000,
+            "fixed": true,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 4000,
+        "leftover_cents": 6000,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 4000,
+        "wants_total_cents": 0,
+        "warning_rule_ids": [
+          "rent-burden",
+          "housing-cap",
+          "emergency-cover"
+        ],
+        "suggestions": [
+          "Assign leftover 6000 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "emergency-ok-cover",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": 12000,
+        "expenses": [
+          {
+            "name": "Rent",
+            "category": "Housing",
+            "amount_cents": 4000,
+            "fixed": true,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 4000,
+        "leftover_cents": 6000,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 4000,
+        "wants_total_cents": 0,
+        "warning_rule_ids": [
+          "rent-burden",
+          "housing-cap"
+        ],
+        "suggestions": [
+          "Assign leftover 6000 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "shortfall-wants-first",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Rent",
+            "category": "Housing",
+            "amount_cents": 6000,
+            "fixed": true,
+            "one_off": false,
+            "debt": false
+          },
+          {
+            "name": "Fun",
+            "category": "Food",
+            "amount_cents": 6000,
+            "fixed": false,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 12000,
+        "leftover_cents": -2000,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 6000,
+        "wants_total_cents": 6000,
+        "warning_rule_ids": [
+          "rent-severe",
+          "housing-cap",
+          "savings-floor",
+          "shortfall"
+        ],
+        "suggestions": [
+          "Cut Wants by 2000 minor units first (variable non-debt)."
+        ]
+      }
+    },
+    {
+      "id": "surplus-to-savings",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Rent",
+            "category": "Housing",
+            "amount_cents": 4000,
+            "fixed": true,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 4000,
+        "leftover_cents": 6000,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 4000,
+        "wants_total_cents": 0,
+        "warning_rule_ids": [
+          "rent-burden",
+          "housing-cap"
+        ],
+        "suggestions": [
+          "Assign leftover 6000 minor units to Savings."
+        ]
+      }
+    },
+    {
+      "id": "balanced-zero",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Feeding",
+            "category": "Food",
+            "amount_cents": 10000,
+            "fixed": false,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expected": {
+        "available_cents": 10000,
+        "total_expenses_cents": 10000,
+        "leftover_cents": 0,
+        "savings_target_cents": 2000,
+        "needs_total_cents": 0,
+        "wants_total_cents": 10000,
+        "warning_rule_ids": [
+          "savings-floor"
+        ],
+        "suggestions": []
+      }
+    }
+  ],
+  "error_cases": [
+    {
+      "id": "negative-income",
+      "inputs": {
+        "income_cents": -1,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": []
+      },
+      "expect_error": true,
+      "error_match": ">= 0"
+    },
+    {
+      "id": "negative-side",
+      "inputs": {
+        "income_cents": 0,
+        "side_cents": -1,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": []
+      },
+      "expect_error": true,
+      "error_match": ">= 0"
+    },
+    {
+      "id": "negative-rollover",
+      "inputs": {
+        "income_cents": 0,
+        "side_cents": 0,
+        "rollover_cents": -1,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": []
+      },
+      "expect_error": true,
+      "error_match": ">= 0"
+    },
+    {
+      "id": "unknown-category",
+      "inputs": {
+        "income_cents": 10,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Yacht",
+            "category": "Yachts",
+            "amount_cents": 100,
+            "fixed": false,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expect_error": true,
+      "error_match": "unknown expense category"
+    },
+    {
+      "id": "empty-expense-name",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "  ",
+            "category": "Food",
+            "amount_cents": 100,
+            "fixed": false,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expect_error": true,
+      "error_match": "non-empty"
+    },
+    {
+      "id": "negative-expense-amount",
+      "inputs": {
+        "income_cents": 10000,
+        "side_cents": 0,
+        "rollover_cents": 0,
+        "savings_pct": 20,
+        "needs_cap_pct": 50,
+        "wants_cap_pct": 30,
+        "emergency_cents": null,
+        "expenses": [
+          {
+            "name": "Rent",
+            "category": "Housing",
+            "amount_cents": -50,
+            "fixed": false,
+            "one_off": false,
+            "debt": false
+          }
+        ]
+      },
+      "expect_error": true,
+      "error_match": ">= 0"
+    }
+  ]
+}

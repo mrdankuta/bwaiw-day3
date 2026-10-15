@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Disclaimer · Monthly Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Inconsolata:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app/app.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+</head>
+<body data-active="">
+<main><section class="section"><div class="container" style="max-width:820px">
+  <p class="eyebrow">Read before acting on anything here</p>
+  <h1 style="font-size:clamp(32px,4vw,56px)">Disclaimer</h1>
+  <div class="stack" style="margin-top:24px">
+    <div class="card card-elev"><h3>Not an adviser</h3>
+    <p class="body-muted" style="font-size:15px;margin:8px 0 0">This planner provides educational information only. It is not financial, tax, or legal advice, and it creates no adviser–client relationship. It is not a registered investment adviser, broker-dealer, or fiduciary.</p></div>
+    <div class="card card-elev"><h3>Computed, not verified</h3>
+    <p class="body-muted" style="font-size:15px;margin:8px 0 0">Figures shown come from deterministic computation over the amounts you entered manually; nothing here is bank-verified. Warning thresholds (rent 30% / severe 50%, housing 28%, debt 36%, savings floor 20%, emergency cover 3 months) are heuristics for attention, not verdicts.</p></div>
+    <div class="card card-elev"><h3>Non-discretionary — it never moves money</h3>
+    <p class="body-muted" style="font-size:15px;margin:8px 0 0">This planner suggests; it never acts. It cannot pay bills, transfer funds, or move money of any kind. There are no autonomous payments and no automatic transfers. This planner suggests; it never moves money (non-discretionary). Consult a qualified professional before acting.</p></div>
+    <div class="card card-elev"><h3>How Advice is produced</h3>
+    <p class="body-muted" style="font-size:15px;margin:8px 0 0">The engine computes the Plan first on your device; a deterministic template only verbalizes the numbers it is given, and output is validated before render. Everything runs on your device — no figures leave your machine. Prompt template, model, and engine versions are recorded with every output.</p></div>
+    <div class="row"><a class="btn btn-ghost" href="index.html">← Back to the planner</a></div>
+  </div>
+</div></section></main>
+<script type="module">
+import { renderChrome } from './app/chrome.js';
+renderChrome('');
+</script>
+</body>
+</html>

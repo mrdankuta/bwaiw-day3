@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Step 2: Expenses · Monthly Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Inconsolata:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app/app.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+</head>
+<body data-active="expenses">
+<main><section class="section"><div class="container">
+  <div id="steps" style="margin-bottom:8px"></div>
+  <p class="meta" id="month-line" style="margin:16px 0 8px"></p>
+  <div class="grid-2-1" style="margin-top:8px">
+    <div class="card card-elev">
+      <p class="eyebrow">Step 2 — Money out</p>
+      <h2>What has to go out?</h2>
+      <p class="body-muted" style="font-size:14.5px">Rent is a Fixed Expense; feeding is Variable; a surprise repair is One-off. Debt minimums enter first — obligations before choices.</p>
+      <div class="table-wrap"><table class="ds-table" style="margin-top:16px" aria-label="Month expenses">
+        <thead><tr><th>Expense</th><th>Category</th><th>Flags</th><th style="text-align:right">Amount</th><th></th></tr></thead>
+        <tbody id="expense-rows"></tbody>
+        <tfoot><tr class="total-row"><td colspan="3">Total planned out</td><td class="num-col" id="ex-total">—</td><td></td></tr></tfoot>
+      </table></div>
+      <div class="grid-3" style="margin-top:20px">
+        <div class="stat card-stat"><div class="stat-num num" id="ex-needs" style="font-size:30px">—</div><div class="stat-label">Needs — fixed + debt minimums</div></div>
+        <div class="stat card-stat"><div class="stat-num num" id="ex-wants" style="font-size:30px">—</div><div class="stat-label">Wants — variable, non-debt</div></div>
+        <div class="stat card-stat"><div class="stat-num num" id="ex-count" style="font-size:30px">—</div><div class="stat-label">Expenses entered</div></div>
+      </div>
+    </div>
+    <div class="card card-elev">
+      <p class="eyebrow" style="color:var(--fg-2)">Add an Expense</p>
+      <div class="stack" style="gap:14px;margin-top:4px">
+        <div class="field"><label for="x-name">Name</label>
+          <input class="input" id="x-name" placeholder="e.g. Rent — 2-bed flat"></div>
+        <div class="grid-2" style="gap:12px">
+          <div class="field"><label for="x-category">Category</label>
+            <select class="input" id="x-category">
+              <option>Housing</option><option>Food</option><option>Transport</option>
+              <option>Utilities</option><option>Health</option><option>Savings</option><option>Other</option>
+            </select></div>
+          <div class="field"><label for="x-amount">Amount · ₦</label>
+            <div class="money"><span class="cur">₦</span><input class="input num" id="x-amount" inputmode="numeric" placeholder="25000"></div></div>
+        </div>
+        <div class="flags" role="group" aria-label="Expense flags">
+          <label class="flag"><input type="checkbox" id="x-fixed"> Fixed expense</label>
+          <label class="flag"><input type="checkbox" id="x-debt"> Debt payment minimum</label>
+          <label class="flag"><input type="checkbox" id="x-oneoff"> One-off expense</label>
+        </div>
+        <p class="meta" id="add-error" style="color:var(--danger)" hidden></p>
+        <div class="row"><button class="btn btn-primary" id="x-add">Add expense</button></div>
+        <hr class="divider" style="margin-block:12px">
+        <a class="btn btn-dark btn-arrow" style="width:100%;justify-content:center" id="to-plan" href="#">Continue to Plan </a>
+      </div>
+    </div>
+  </div>
+</div></section></main>
+<script type="module">
+import { renderChrome, stepper, wireFlags } from './app/chrome.js';
+import { escapeHtml, fmtMoneyShort, monthInputsForEngine, planMonth, unitsToMinorUnits } from './app/engine.js';
+import { openStore } from './store/store.js';
+
+renderChrome('expenses');
+document.getElementById('steps').innerHTML = stepper('expenses');
+wireFlags();
+
+const monthId = Number(new URLSearchParams(location.search).get('month'));
+if (!Number.isInteger(monthId) || monthId <= 0) {
+  document.getElementById('month-line').textContent = 'No month selected — start from Step 1.';
+  throw new Error('no month');
+}
+document.getElementById('to-plan').href = `plan.html?month=${monthId}`;
+
+const store = await openStore();
+const $ = (id) => document.getElementById(id);
+
+async function refresh() {
+  const month = await store.getMonth(monthId);
+  if (!month) { $('month-line').textContent = 'Unknown month.'; return; }
+  $('month-line').textContent = `Month ${monthId} (${month.currency}). Add one Expense at a time.`;
+  const plan = await planMonth(monthInputsForEngine(month));
+  const tb = $('expense-rows');
+  tb.innerHTML = month.expenses.length ? '' : '<tr><td colspan="5" class="meta">No expenses yet — add the first on the right.</td></tr>';
+  for (const e of month.expenses) {
+    const flags = [e.fixed && 'Fixed', e.debt && 'Debt', e.one_off && 'One-off'].filter(Boolean);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td style="font-weight:600">${escapeHtml(e.name)}</td>` +
+      `<td><span class="tag">${escapeHtml(e.category)}</span></td>` +
+      `<td class="meta">${flags.length ? flags.join(' · ') : 'Variable'}</td>` +
+      `<td class="num-col">${fmtMoneyShort(e.amount_cents, month.currency)}</td>` +
+      `<td style="width:40px"><button class="icon-btn" aria-label="Remove expense" title="Remove expense">✕</button></td>`;
+    tr.querySelector('button').addEventListener('click', async () => {
+      await store.deleteExpense(e.id);
+      await refresh();
+    });
+    tb.appendChild(tr);
+  }
+  $('ex-total').textContent = fmtMoneyShort(plan.total_expenses_cents, month.currency);
+  $('ex-needs').textContent = fmtMoneyShort(plan.needs_total_cents, month.currency);
+  $('ex-wants').textContent = fmtMoneyShort(plan.wants_total_cents, month.currency);
+  $('ex-count').textContent = String(month.expenses.length);
+}
+await refresh();
+
+const err = $('add-error');
+$('x-add').addEventListener('click', async () => {
+  err.hidden = true;
+  try {
+    const name = $('x-name').value.trim();
+    if (!name) throw new Error('Give the expense a name first');
+    await store.addExpense(monthId, {
+      name,
+      category: $('x-category').value,
+      amount_cents: unitsToMinorUnits(Number($('x-amount').value)),
+      fixed: $('x-fixed').checked,
+      one_off: $('x-oneoff').checked,
+      debt: $('x-debt').checked,
+    });
+    $('x-name').value = ''; $('x-amount').value = '';
+    for (const id of ['x-fixed', 'x-debt', 'x-oneoff']) $(id).checked = false;
+    wireFlags();
+    await refresh();
+  } catch (e) { err.textContent = e.message; err.hidden = false; }
+});
+</script>
+</body>
+</html>

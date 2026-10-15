@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/budget-engine", "crates/budget-wasm"]
+resolver = "2"
