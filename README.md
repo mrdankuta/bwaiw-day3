@@ -1,5 +1,7 @@
 # Monthly Planner
 
+Live at https://monthly-planner-4sn.pages.dev/ (Cloudflare Pages).
+
 Plan the month before it spends you. A single-user monthly budget
 planner that runs entirely on your device: deterministic budget math
 in WebAssembly, months in on-device SQLite, advice from a validated
