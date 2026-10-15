@@ -4,7 +4,7 @@
 // Fonts are stale-while-revalidated (progressive enhancement only).
 // No computation or storage behavior changes: the engine and the
 // month store already run fully on-device.
-const CACHE = 'monthly-planner-v1';
+const CACHE = 'monthly-planner-v2';
 
 const SHELL = [
   '.',
@@ -64,6 +64,27 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin === self.location.origin) {
+    if (request.mode === 'navigate') {
+      // Navigations must never hard-fail under SW control: cached page,
+      // else network (cached for next time), else the cached home page.
+      event.respondWith(
+        (async () => {
+          const cache = await caches.open(CACHE);
+          try {
+            const hit = await cache.match(request);
+            if (hit) return hit;
+            const res = await fetch(request);
+            if (res.ok) cache.put(request, res.clone());
+            return res;
+          } catch {
+            const home = await cache.match(new URL('index.html', self.registration.scope).href);
+            if (home) return home;
+            throw new Error('offline and nothing cached');
+          }
+        })(),
+      );
+      return;
+    }
     // App shell and data runtime: cache-first, populate on first load.
     event.respondWith(
       (async () => {
